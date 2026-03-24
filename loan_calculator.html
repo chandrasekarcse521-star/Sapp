@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HDB Financial – Loan Calculator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary:   #1a3c6e;
+      --accent:    #e8a020;
+      --light-bg:  #f0f4fb;
+      --card-bg:   #ffffff;
+      --text-dark: #1a2a44;
+      --text-muted:#5a6a84;
+      --success:   #198754;
+      --border:    #dce5f5;
+    }
+
+    body {
+      font-family: 'Poppins', 'Noto Sans Tamil', sans-serif;
+      background: var(--light-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar { background: var(--primary); box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .navbar-brand { font-weight: 700; font-size: 1.3rem; color: #fff !important; letter-spacing: .5px; }
+    .navbar-brand span { color: var(--accent); }
+    .nav-link { color: rgba(255,255,255,.85) !important; font-weight: 500; }
+    .nav-link:hover { color: var(--accent) !important; }
+
+    /* ── HERO STRIP ── */
+    .hero-strip {
+      background: linear-gradient(135deg, var(--primary) 0%, #254f99 100%);
+      padding: 2.5rem 0 3.5rem;
+      clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%);
+    }
+    .hero-strip h1 { color: #fff; font-weight: 700; font-size: 2rem; }
+    .hero-strip p  { color: rgba(255,255,255,.78); font-size: .95rem; }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(26,60,110,.13);
+      border: 1px solid var(--border);
+      margin-top: -2.5rem;
+      padding: 2rem;
+    }
+    .form-card .form-label { font-weight: 600; font-size: .88rem; color: var(--text-dark); }
+    .form-card .form-control {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: .6rem 1rem;
+      font-size: .95rem;
+    }
+    .form-card .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,60,110,.12);
+    }
+    .btn-calculate {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .65rem 2rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      transition: background .2s, transform .1s;
+    }
+    .btn-calculate:hover { background: #254f99; transform: translateY(-1px); }
+    .btn-popup {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .65rem 1.4rem;
+      font-weight: 600;
+      transition: background .2s, transform .1s;
+    }
+    .btn-popup:hover { background: #c8881a; transform: translateY(-1px); }
+
+    /* ── TAMIL MESSAGE BOX ── */
+    .tamil-box {
+      background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+      font-family: 'Noto Sans Tamil', sans-serif;
+      font-size: 1.02rem;
+      line-height: 1.9;
+      color: var(--text-dark);
+      margin-top: 1.5rem;
+      position: relative;
+    }
+    .tamil-box::before {
+      content: '📞';
+      position: absolute;
+      top: -14px;
+      left: 18px;
+      background: #fff;
+      padding: 0 6px;
+      font-size: 1.3rem;
+    }
+    .tamil-box .highlight {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-weight: 700;
+      font-size: .93rem;
+    }
+    .tamil-box .amount-tag {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .section-badge {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    /* ── SUMMARY CARDS ── */
+    .summary-section { display: none; }
+    .summary-section.show { display: block; animation: fadeUp .4s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      box-shadow: 0 3px 12px rgba(26,60,110,.07);
+      height: 100%;
+    }
+    .info-card .label { font-size: .8rem; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+    .info-card .value { font-size: 1.35rem; font-weight: 700; color: var(--primary); }
+    .info-card .value.green  { color: var(--success); }
+    .info-card .value.orange { color: #d97706; }
+
+    /* ── EMI TABLE ── */
+    .emi-table-wrap {
+      background: var(--card-bg);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 3px 14px rgba(26,60,110,.08);
+    }
+    .emi-table-wrap table thead { background: var(--primary); color: #fff; }
+    .emi-table-wrap table tbody tr:hover { background: #f0f4fb; }
+    .emi-badge {
+      background: #e8f0fe;
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+
+    /* ── DEDUCTIONS TABLE ── */
+    .deduction-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 3px 14px rgba(26,60,110,.08);
+    }
+    .deduction-card thead { background: #254f99; color: #fff; }
+    .deduction-card tfoot { background: var(--primary); color: #fff; font-weight: 700; }
+
+    /* ── MODAL ── */
+    .modal-header { background: var(--primary); color: #fff; border-radius: 12px 12px 0 0; }
+    .modal-header .btn-close { filter: invert(1); }
+    .modal-body { background: #f8faff; }
+    .calc-display {
+      background: var(--primary);
+      color: var(--accent);
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: right;
+      border-radius: 10px;
+      padding: .5rem 1rem;
+      font-family: monospace;
+      letter-spacing: 1px;
+      min-height: 56px;
+    }
+    .calc-sub {
+      color: rgba(255,255,255,.6);
+      font-size: .85rem;
+      text-align: right;
+      padding: 0 .5rem .2rem;
+      min-height: 18px;
+      font-family: monospace;
+    }
+    .calc-btn {
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 100%;
+      padding: .9rem .5rem;
+      transition: filter .15s, transform .1s;
+      cursor: pointer;
+    }
+    .calc-btn:hover { filter: brightness(1.12); transform: scale(1.03); }
+    .calc-btn:active { transform: scale(.97); }
+    .btn-num  { background: #fff; color: var(--text-dark); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .btn-op   { background: #dce8ff; color: var(--primary); }
+    .btn-eq   { background: var(--accent); color: #fff; }
+    .btn-clr  { background: #fee2e2; color: #b91c1c; }
+    .btn-zero { grid-column: span 2; }
+
+    .loan-quick-btns .btn { font-size: .78rem; border-radius: 20px; padding: 3px 12px; }
+
+    footer {
+      background: var(--primary);
+      color: rgba(255,255,255,.7);
+      text-align: center;
+      padding: 1rem;
+      font-size: .82rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─────────────── NAVBAR ─────────────── -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="#">HDB <span>Financial</span></a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-2">
+        <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Loan Types</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ─────────────── HERO ─────────────── -->
+<div class="hero-strip text-center">
+  <div class="container">
+    <h1>🏦 Loan Eligibility & EMI Calculator</h1>
+    <p>வாடிக்கையாளர் சேவை • HDB Financial Services</p>
+  </div>
+</div>
+
+<!-- ─────────────── FORM CARD ─────────────── -->
+<div class="container" style="max-width:700px;">
+  <div class="form-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <span class="section-badge">படிவம்</span>
+        <h5 class="mt-2 mb-0 fw-700">வாடிக்கையாளர் விவரம்</h5>
+        <small class="text-muted">Customer Information</small>
+      </div>
+      <button class="btn-popup btn" data-bs-toggle="modal" data-bs-target="#calcModal">
+        🧮 Calculator
+      </button>
+    </div>
+    <hr class="mt-0"/>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">👤 வாடிக்கையாளர் பெயர் (Customer Name)</label>
+        <input type="text" id="custName" class="form-control" placeholder="பெயர் உள்ளிடவும்" oninput="updateTamil()"/>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">💰 Loan Amount (₹)</label>
+        <input type="number" id="loanAmt" class="form-control" placeholder="உதா: 200000" min="0" oninput="calculate()"/>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">📈 வட்டி விகிதம் – ROI (% per annum)</label>
+        <input type="number" id="roiRate" class="form-control" value="35" min="1" max="100" oninput="calculate()"/>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">🏷️ Processing Fee (%)</label>
+        <input type="number" id="procPct" class="form-control" value="3" min="0" max="20" oninput="calculate()"/>
+      </div>
+    </div>
+
+    <div class="mt-3 loan-quick-btns">
+      <small class="text-muted me-2">Quick Amount:</small>
+      <button class="btn btn-outline-primary me-1" onclick="setLoan(50000)">₹50K</button>
+      <button class="btn btn-outline-primary me-1" onclick="setLoan(100000)">₹1L</button>
+      <button class="btn btn-outline-primary me-1" onclick="setLoan(200000)">₹2L</button>
+      <button class="btn btn-outline-primary me-1" onclick="setLoan(300000)">₹3L</button>
+      <button class="btn btn-outline-primary"      onclick="setLoan(500000)">₹5L</button>
+    </div>
+
+    <div class="mt-4 d-flex gap-2 flex-wrap">
+      <button class="btn-calculate btn" onclick="calculate()">✅ Calculate</button>
+      <button class="btn btn-outline-secondary" onclick="resetForm()">🔄 Reset</button>
+    </div>
+  </div>
+
+  <!-- ─── TAMIL MESSAGE BOX ─── -->
+  <div class="tamil-box mt-4" id="tamilBox" style="display:none;">
+    <p class="mb-1" style="font-size:.78rem;color:#888;font-family:Poppins,sans-serif;">📋 Customer Script (Tamil)</p>
+    <div id="tamilMsg"></div>
+  </div>
+</div>
+
+<!-- ─────────────── SUMMARY SECTION ─────────────── -->
+<div class="container mt-4 summary-section" id="summarySection" style="max-width:900px;">
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="info-card">
+        <div class="label">Loan Amount</div>
+        <div class="value" id="s_loan">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="info-card">
+        <div class="label">Net Disbursed</div>
+        <div class="value green" id="s_net">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="info-card">
+        <div class="label">Total Deductions</div>
+        <div class="value orange" id="s_ded">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="info-card">
+        <div class="label">ROI (Annual)</div>
+        <div class="value" id="s_roi">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deduction Breakup -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-5">
+      <h6 class="fw-700 mb-3">💸 Deduction Breakup</h6>
+      <div class="deduction-card">
+        <table class="table table-bordered mb-0" style="font-size:.9rem;">
+          <thead>
+            <tr><th>Item</th><th class="text-end">Amount (₹)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Processing Fee (<span id="t_procPct"></span>%)</td><td class="text-end" id="t_proc">—</td></tr>
+            <tr><td>GST on Processing (18%)</td><td class="text-end" id="t_gst">—</td></tr>
+            <tr><td>Insurance Amount</td><td class="text-end" id="t_ins">—</td></tr>
+            <tr><td>Stamp Duty</td><td class="text-end" id="t_stamp">—</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td><b>Total Deductions</b></td><td class="text-end" id="t_total">—</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMI Table -->
+    <div class="col-md-7">
+      <h6 class="fw-700 mb-3">📅 EMI Breakdown</h6>
+      <div class="emi-table-wrap">
+        <table class="table table-bordered mb-0 text-center" style="font-size:.9rem;">
+          <thead>
+            <tr>
+              <th>Tenure</th>
+              <th>Monthly EMI</th>
+              <th>Total Payable</th>
+              <th>Total Interest</th>
+            </tr>
+          </thead>
+          <tbody id="emiBody"></tbody>
+        </table>
+      </div>
+      <small class="text-muted d-block mt-2">* EMI calculated on loan amount at selected ROI.</small>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ POPUP CALCULATOR MODAL ════════════ -->
+<div class="modal fade" id="calcModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:340px;">
+    <div class="modal-content border-0" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header">
+        <h5 class="modal-title">🧮 Loan Calculator</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-3">
+
+        <!-- Loan Quick Fill -->
+        <div class="mb-2">
+          <small class="text-muted">Loan Amount Quick Fill:</small><br/>
+          <div class="d-flex gap-1 flex-wrap mt-1 loan-quick-btns">
+            <button class="btn btn-sm btn-outline-primary" onclick="calcFill(50000)">₹50K</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="calcFill(100000)">₹1L</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="calcFill(200000)">₹2L</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="calcFill(300000)">₹3L</button>
+          </div>
+        </div>
+
+        <div class="calc-sub" id="calcSub">&nbsp;</div>
+        <div class="calc-display" id="calcDisplay">0</div>
+
+        <div class="mt-3" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          <button class="calc-btn btn-clr"    onclick="calcAC()">AC</button>
+          <button class="calc-btn btn-op"     onclick="calcSign()">+/-</button>
+          <button class="calc-btn btn-op"     onclick="calcPct()">%</button>
+          <button class="calc-btn btn-op"     onclick="calcOp('÷')">÷</button>
+
+          <button class="calc-btn btn-num"    onclick="calcNum('7')">7</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('8')">8</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('9')">9</button>
+          <button class="calc-btn btn-op"     onclick="calcOp('×')">×</button>
+
+          <button class="calc-btn btn-num"    onclick="calcNum('4')">4</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('5')">5</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('6')">6</button>
+          <button class="calc-btn btn-op"     onclick="calcOp('−')">−</button>
+
+          <button class="calc-btn btn-num"    onclick="calcNum('1')">1</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('2')">2</button>
+          <button class="calc-btn btn-num"    onclick="calcNum('3')">3</button>
+          <button class="calc-btn btn-op"     onclick="calcOp('+')">+</button>
+
+          <button class="calc-btn btn-num btn-zero" onclick="calcNum('0')">0</button>
+          <button class="calc-btn btn-num"    onclick="calcDot()">.</button>
+          <button class="calc-btn btn-eq"     onclick="calcEq()">=</button>
+        </div>
+
+        <!-- Loan Result inside popup -->
+        <div class="mt-3 p-2 rounded" style="background:#f0f4fb;font-size:.82rem;" id="popupResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── FOOTER ─────────────── -->
+<footer>
+  © 2025 HDB Financial Services &nbsp;|&nbsp; Chandrasekar &nbsp;|&nbsp; All rights reserved
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ═══════════ CONSTANTS ═══════════
+const INSURANCE = 2599;
+const STAMP_DUTY = 200;
+
+// ═══════════ HELPERS ═══════════
+const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const emi = (P, rAnn, n) => {
+  const r = rAnn / 12 / 100;
+  if (r === 0) return P / n;
+  return P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+};
+
+function setLoan(v) {
+  document.getElementById('loanAmt').value = v;
+  calculate();
+}
+
+function resetForm() {
+  document.getElementById('custName').value = '';
+  document.getElementById('loanAmt').value = '';
+  document.getElementById('roiRate').value = 35;
+  document.getElementById('procPct').value = 3;
+  document.getElementById('summarySection').classList.remove('show');
+  document.getElementById('tamilBox').style.display = 'none';
+}
+
+// ═══════════ MAIN CALCULATE ═══════════
+function calculate() {
+  const loan   = parseFloat(document.getElementById('loanAmt').value) || 0;
+  const roi    = parseFloat(document.getElementById('roiRate').value) || 35;
+  const procP  = parseFloat(document.getElementById('procPct').value) || 3;
+
+  if (loan <= 0) {
+    document.getElementById('summarySection').classList.remove('show');
+    return;
+  }
+
+  const proc     = loan * procP / 100;
+  const gst      = proc * 0.18;
+  const totalDed = proc + gst + INSURANCE + STAMP_DUTY;
+  const net      = loan - totalDed;
+
+  // KPI
+  document.getElementById('s_loan').textContent = fmt(loan);
+  document.getElementById('s_net').textContent  = fmt(net);
+  document.getElementById('s_ded').textContent  = fmt(totalDed);
+  document.getElementById('s_roi').textContent  = roi + '%';
+
+  // Deduction table
+  document.getElementById('t_procPct').textContent = procP;
+  document.getElementById('t_proc').textContent    = fmt(proc);
+  document.getElementById('t_gst').textContent     = fmt(gst);
+  document.getElementById('t_ins').textContent     = fmt(INSURANCE);
+  document.getElementById('t_stamp').textContent   = fmt(STAMP_DUTY);
+  document.getElementById('t_total').textContent   = fmt(totalDed);
+
+  // EMI rows
+  const tenures = [12, 24, 36];
+  let rows = '';
+  const emiValues = {};
+  tenures.forEach(n => {
+    const e  = emi(loan, roi, n);
+    const tp = e * n;
+    const ti = tp - loan;
+    emiValues[n] = e;
+    rows += `<tr>
+      <td><b>${n} Months</b></td>
+      <td><span class="emi-badge">${fmt(e)}</span></td>
+      <td>${fmt(tp)}</td>
+      <td class="text-danger">${fmt(ti)}</td>
+    </tr>`;
+  });
+  document.getElementById('emiBody').innerHTML = rows;
+
+  document.getElementById('summarySection').classList.add('show');
+  updateTamil(loan, emiValues, net);
+}
+
+// ═══════════ TAMIL MESSAGE ═══════════
+function updateTamil(loan, emiValues, net) {
+  const name = document.getElementById('custName').value.trim() || 'வாடிக்கையாளர்';
+  if (!loan) { document.getElementById('tamilBox').style.display = 'none'; return; }
+
+  const h = s => `<span class="highlight">${s}</span>`;
+  const a = s => `<span class="amount-tag">${s}</span>`;
+
+  const msg = `
+    வணக்கம் ${h(name)} அவர்களே! நான் <b>சந்திரசேகர்</b>, HDB Financial-இல் இருந்து call பண்றேன்.<br><br>
+    நீங்கள் Loan எடுத்து சரியாக Pay பண்றதுனால, உங்களுக்கு Loan Amount
+    ${a(fmt(loan))} Eligible ஆகியிருக்கீங்க.<br><br>
+    உங்களுக்கு இப்போது தேவை இருக்கா? 🤝<br><br>
+    <b>📅 மாத தவணை (EMI) விவரம்:</b><br>
+    &nbsp;&nbsp;• <b>36 மாதம்</b> → ${a(fmt(emiValues[36]))} / மாதம்<br>
+    &nbsp;&nbsp;• <b>24 மாதம்</b> → ${a(fmt(emiValues[24]))} / மாதம்<br>
+    &nbsp;&nbsp;• <b>12 மாதம்</b> → ${a(fmt(emiValues[12]))} / மாதம்<br><br>
+    கையில் கிடைக்கும் தொகை (Net Disbursed): ${a(fmt(net))}<br>
+    <span style="color:#888;font-size:.85rem;">* Processing Fee + GST + Insurance + Stamp Duty கழித்தப் பிறகு.</span>
+  `;
+
+  document.getElementById('tamilMsg').innerHTML = msg;
+  document.getElementById('tamilBox').style.display = 'block';
+}
+
+// ═══════════ POPUP CALCULATOR LOGIC ═══════════
+let cDisplay = '0', cPrev = '', cOp = '', cNew = true;
+
+const showCalc = () => {
+  document.getElementById('calcDisplay').textContent = parseFloat(cDisplay).toLocaleString('en-IN', {maximumFractionDigits:8});
+};
+const showSub  = t => document.getElementById('calcSub').textContent = t || '\u00a0';
+
+function calcNum(d) {
+  if (cNew) { cDisplay = d === '.' ? '0.' : d; cNew = false; }
+  else { if (d === '.' && cDisplay.includes('.')) return; cDisplay += d; }
+  showCalc();
+}
+function calcDot() { calcNum('.'); }
+function calcAC()  { cDisplay = '0'; cPrev = ''; cOp = ''; cNew = true; showCalc(); showSub(''); }
+function calcSign(){ cDisplay = String(-parseFloat(cDisplay)); showCalc(); }
+function calcPct() { cDisplay = String(parseFloat(cDisplay) / 100); showCalc(); }
+
+function calcOp(op) {
+  if (cOp && !cNew) calcEq(true);
+  cPrev = cDisplay;
+  cOp   = op;
+  cNew  = true;
+  showSub(parseFloat(cPrev).toLocaleString('en-IN') + ' ' + op);
+}
+
+function calcEq(chain) {
+  if (!cOp) return;
+  const a = parseFloat(cPrev), b = parseFloat(cDisplay);
+  let r;
+  if (cOp === '+') r = a + b;
+  else if (cOp === '−') r = a - b;
+  else if (cOp === '×') r = a * b;
+  else if (cOp === '÷') r = b !== 0 ? a / b : 'Error';
+  if (!chain) showSub(parseFloat(cPrev).toLocaleString('en-IN') + ' ' + cOp + ' ' + parseFloat(cDisplay).toLocaleString('en-IN') + ' =');
+  cDisplay = String(r);
+  cOp = ''; cPrev = ''; cNew = true;
+  showCalc();
+  showPopupResult(parseFloat(cDisplay));
+}
+
+function calcFill(v) {
+  cDisplay = String(v);
+  cNew = false;
+  showCalc();
+  showPopupResult(v);
+}
+
+function showPopupResult(loan) {
+  if (!loan || loan <= 0) { document.getElementById('popupResult').innerHTML = ''; return; }
+  const roi   = parseFloat(document.getElementById('roiRate').value) || 35;
+  const procP = parseFloat(document.getElementById('procPct').value) || 3;
+  const proc  = loan * procP / 100;
+  const gst   = proc * 0.18;
+  const total  = proc + gst + INSURANCE + STAMP_DUTY;
+  const net    = loan - total;
+  const e12   = emi(loan, roi, 12);
+  const e24   = emi(loan, roi, 24);
+  const e36   = emi(loan, roi, 36);
+
+  document.getElementById('popupResult').innerHTML = `
+    <b>💰 Loan:</b> ${fmt(loan)}<br>
+    <b>✂️ Net Disbursed:</b> ${fmt(net)}<br>
+    <b>📉 Total Deductions:</b> ${fmt(total)}<br>
+    <hr class="my-1"/>
+    <b>📅 EMI (12M):</b> ${fmt(e12)} &nbsp;|&nbsp;
+    <b>24M:</b> ${fmt(e24)} &nbsp;|&nbsp;
+    <b>36M:</b> ${fmt(e36)}
+  `;
+}
+</script>
+</body>
+</html>
